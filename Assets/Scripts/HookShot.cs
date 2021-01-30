@@ -4,18 +4,34 @@ using UnityEngine;
 
 public class HookShot : MonoBehaviour
 {
+    const float NORMAL_FOV = 60f;
+    const float HOOKSHOT_FOV = 100f;
+
     public GameObject PlayerCamera;
     public Movements movements;
 
+    public Transform HookShotTransform;
+    public CameraFOV cameraFOV;
+    public ParticleSystem particleSystem;
+
     State state;
-    enum State {Normal,  Flying}
+    enum State {Normal,  HookThrown, Flying}
 
     public CharacterController characterController;
 
-    public Vector3 HookShotPos;
+    Vector3 HookShotPos;
     public float speedMultiplier;
     public float speedMin;
     public float speedMax;
+
+    float hookShotSize;
+
+    GameObject Target;
+
+    private void Awake()
+    {
+        HookShotTransform.gameObject.SetActive(false);
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -33,6 +49,9 @@ public class HookShot : MonoBehaviour
                 movements.canMove = true;
                 HookShotStart();
                 break;
+            case State.HookThrown:
+                HandleThrow();
+                break;
             case State.Flying:
                 movements.canMove = false;
                 HookShotMovement();
@@ -49,41 +68,141 @@ public class HookShot : MonoBehaviour
             {
                 //hit.point
                 HookShotPos = hit.point;
-                state = State.Flying;
+                Target = hit.collider.gameObject;
+                hookShotSize = 0f;
+                HookShotTransform.gameObject.SetActive(true);
+                HookShotTransform.localScale = Vector3.zero;
+                state = State.HookThrown;
             }
         }
+    }
+
+    void HandleThrow()
+    {
+        Vector3 target = Vector3.zero;
+        if ( Vector3.Distance(new Vector3(0, HookShotPos.y, 0), new Vector3(0, HookShotTransform.position.y, 0)) > 0)
+        {
+            if(HookShotPos.y > HookShotTransform.position.y)
+            {
+                //Debug.Log("trop grand");
+                target = HookShotPos;
+                target.y = HookShotPos.y - Vector3.Distance(new Vector3(0, HookShotPos.y, 0), new Vector3(0, HookShotTransform.position.y, 0)) / 3;
+            }
+            else if(HookShotPos.y < HookShotTransform.position.y)
+            {
+                //Debug.Log("trop petit");
+                target = HookShotPos;
+                target.y = HookShotPos.y + Vector3.Distance(new Vector3(0, HookShotPos.y, 0), new Vector3(0, HookShotTransform.position.y, 0)) / 3;
+            }
+        }
+        else
+        {
+            target = HookShotPos;
+        }
+        HookShotTransform.LookAt(target);
+        float throwSpeed = 200f;
+        hookShotSize += throwSpeed * Time.deltaTime;
+        HookShotTransform.localScale = new Vector3(1, 1, hookShotSize);
+
+        if(hookShotSize >= Vector3.Distance(transform.position, HookShotPos))
+        {
+            state = State.Flying;
+            cameraFOV.SetCameraFOV(HOOKSHOT_FOV);
+            particleSystem.Play();
+        }
+
     }
     
     void HookShotMovement()
     {
+        Vector3 target = Vector3.zero;
+        if (Vector3.Distance(new Vector3(0, HookShotPos.y, 0), new Vector3(0, HookShotTransform.position.y, 0)) > 0)
+        {
+            if (HookShotPos.y > HookShotTransform.position.y)
+            {
+                //Debug.Log("trop grand");
+                target = HookShotPos;
+                target.y = HookShotPos.y - Vector3.Distance(new Vector3(0, HookShotPos.y, 0), new Vector3(0, HookShotTransform.position.y, 0)) / 3;
+            }
+            else if (HookShotPos.y < HookShotTransform.position.y)
+            {
+                //Debug.Log("trop petit");
+                target = HookShotPos;
+                target.y = HookShotPos.y + Vector3.Distance(new Vector3(0, HookShotPos.y, 0), new Vector3(0, HookShotTransform.position.y, 0)) / 3;
+            }
+        }
+        else
+        {
+            target = HookShotPos;
+        }
+        HookShotTransform.LookAt(target);
 
         Vector3 dir = (HookShotPos - transform.position);
 
-        float hookSpeed = Mathf.Clamp(Vector3.Distance(transform.position, HookShotPos), speedMin, speedMax);
+        float hookSpeed = Mathf.Clamp(1/Vector3.Distance(transform.position, HookShotPos), speedMin, speedMax);
 
         characterController.Move(dir * hookSpeed * speedMultiplier * Time.deltaTime);
         Debug.Log("move");
 
-        if (Vector3.Distance(transform.position, HookShotPos) < 2)
+        if(Target.tag == "Ground" && Vector3.Distance(transform.position, HookShotPos) < 4)
         {
             state = State.Normal;
             movements.velocityY = 0f;
+            HookShotTransform.gameObject.SetActive(false);
+            cameraFOV.SetCameraFOV(NORMAL_FOV);
+            particleSystem.Stop();
+            Target = null;
+        }
+        else if (Vector3.Distance(transform.position, HookShotPos) < 1)
+        {
+            state = State.Normal;
+            movements.velocityY = 0f;
+            HookShotTransform.gameObject.SetActive(false);
+            cameraFOV.SetCameraFOV(NORMAL_FOV);
+            particleSystem.Stop();
+            if(Target.tag == "Breakable" && movements.linearVelocity.magnitude > 1)
+            {
+                Destroy(Target);
+            }
+            Target = null;
         }
 
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(1))
         {
             state = State.Normal;
             movements.velocityY = 0f;
+            HookShotTransform.gameObject.SetActive(false);
+            cameraFOV.SetCameraFOV(NORMAL_FOV);
+            particleSystem.Stop();
+            Target = null;
         }
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
             float momentumExtra = 0.75f;
             movements.momentum = dir * hookSpeed * momentumExtra;
-            float jumpSpeed = 10f;
+            float jumpSpeed = 20f;
             movements.momentum += Vector3.up * jumpSpeed;
             state = State.Normal;
             movements.velocityY = 0f;
+            HookShotTransform.gameObject.SetActive(false);
+            cameraFOV.SetCameraFOV(NORMAL_FOV);
+            particleSystem.Stop();
+            Target = null;
         }
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        state = State.Normal;
+        movements.velocityY = 0f;
+        HookShotTransform.gameObject.SetActive(false);
+        cameraFOV.SetCameraFOV(NORMAL_FOV);
+        particleSystem.Stop();
+        if (Target.tag == "Breakable" && movements.linearVelocity.magnitude > 1)
+        {
+            Destroy(Target);
+        }
+        Target = null;
     }
 }

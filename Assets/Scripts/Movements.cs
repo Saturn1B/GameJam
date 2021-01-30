@@ -19,6 +19,12 @@ public class Movements : MonoBehaviour
 
     public bool canMove = true;
 
+    public Vector3 linearVelocity;
+
+    //private GeometryTwist message;
+    private Vector3 previousPosition = Vector3.zero;
+    private Quaternion previousRotation = Quaternion.identity;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -32,6 +38,7 @@ public class Movements : MonoBehaviour
         {
             Move();
             Sprint();
+            CalculateVelocity();
         }
     }
 
@@ -115,5 +122,14 @@ public class Movements : MonoBehaviour
             yield return new WaitForSeconds(Time.deltaTime);
         }
         playerSpeed = minSpeed;
+    }
+
+    void CalculateVelocity()
+    {
+        linearVelocity = (transform.position - previousPosition) / Time.deltaTime;
+        Vector3 angularVelocity = (transform.rotation.eulerAngles - previousRotation.eulerAngles) / Time.deltaTime;
+        //Debug.Log("Vlinear" + linearVelocity.magnitude);
+        previousPosition = transform.position;
+        previousRotation = transform.rotation;
     }
 }
