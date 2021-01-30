@@ -8,6 +8,7 @@ public class GameManager : MonoBehaviour
     public List<Material> materials;
     public List<Color> colors;
     public bool cyan, magenta, yellow;
+    public int colorRestored;
     // Start is called before the first frame update
     void Awake()
     {
@@ -52,6 +53,14 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void RestoreBaseColor()
+    {
+        for (int i = 0; i < materials.Count; i++)
+        {
+            materials[i].color = colors[i];
+        }
+    }
+
 
     void OnEnable()
     {
@@ -64,11 +73,7 @@ public class GameManager : MonoBehaviour
     {
         if (!EditorApplication.isPlayingOrWillChangePlaymode && EditorApplication.isPlaying)
         {
-            Debug.Log("yes");
-            for (int i = 0; i < materials.Count; i++)
-            {
-                materials[i].color = colors[i];
-            }
+            RestoreBaseColor();
         }
  }
 #endif

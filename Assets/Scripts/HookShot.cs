@@ -28,6 +28,8 @@ public class HookShot : MonoBehaviour
 
     GameObject Target;
 
+    public AudioSource AudioHook, Wall;
+
     private void Awake()
     {
         HookShotTransform.gameObject.SetActive(false);
@@ -73,6 +75,7 @@ public class HookShot : MonoBehaviour
                 HookShotTransform.gameObject.SetActive(true);
                 HookShotTransform.localScale = Vector3.zero;
                 state = State.HookThrown;
+                AudioHook.Play();
             }
         }
     }
@@ -106,6 +109,8 @@ public class HookShot : MonoBehaviour
 
         if(hookShotSize >= Vector3.Distance(transform.position, HookShotPos))
         {
+            //AudioHook.Stop();
+            //AudioHook.Play();
             state = State.Flying;
             cameraFOV.SetCameraFOV(HOOKSHOT_FOV);
             particleSystem.Play();
@@ -152,6 +157,7 @@ public class HookShot : MonoBehaviour
             cameraFOV.SetCameraFOV(NORMAL_FOV);
             particleSystem.Stop();
             Target = null;
+            //AudioHook.Stop();
         }
         else if (Vector3.Distance(transform.position, HookShotPos) < 1)
         {
@@ -162,9 +168,11 @@ public class HookShot : MonoBehaviour
             particleSystem.Stop();
             if(Target.tag == "Breakable" && movements.linearVelocity.magnitude > 1)
             {
+                Wall.Play();
                 Destroy(Target);
             }
             Target = null;
+            //AudioHook.Stop();
         }
 
         if (Input.GetMouseButtonDown(1))
@@ -175,6 +183,7 @@ public class HookShot : MonoBehaviour
             cameraFOV.SetCameraFOV(NORMAL_FOV);
             particleSystem.Stop();
             Target = null;
+            //AudioHook.Stop();
         }
 
         if (Input.GetKeyDown(KeyCode.Space))
@@ -189,6 +198,7 @@ public class HookShot : MonoBehaviour
             cameraFOV.SetCameraFOV(NORMAL_FOV);
             particleSystem.Stop();
             Target = null;
+            //AudioHook.Stop();
         }
     }
 
@@ -201,8 +211,10 @@ public class HookShot : MonoBehaviour
         particleSystem.Stop();
         if (Target.tag == "Breakable" && movements.linearVelocity.magnitude > 1)
         {
+            Wall.Play();
             Destroy(Target);
         }
         Target = null;
+        //AudioHook.Stop();
     }
 }

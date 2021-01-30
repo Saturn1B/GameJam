@@ -10,6 +10,8 @@ public class LandMark : MonoBehaviour
     public GameObject C, M, Y;
     public Material cyan, magenta, yellow;
     public ParticleSystem particleSystem;
+    public GameObject PauseMenu;
+    public GameObject Cross;
 
     private void Awake()
     {
@@ -87,6 +89,8 @@ public class LandMark : MonoBehaviour
                     }
                     particleSystem.gameObject.SetActive(false);
                     particleSystem.gameObject.SetActive(true);
+                    gameManager.colorRestored++;
+ 
                 }
             }
             else if (gameManager.magenta)
@@ -125,6 +129,8 @@ public class LandMark : MonoBehaviour
                     }
                     particleSystem.gameObject.SetActive(false);
                     particleSystem.gameObject.SetActive(true);
+                    gameManager.colorRestored++;
+
                 }
             }
             else if (gameManager.yellow)
@@ -163,6 +169,8 @@ public class LandMark : MonoBehaviour
                     }
                     particleSystem.gameObject.SetActive(false);
                     particleSystem.gameObject.SetActive(true);
+                    gameManager.colorRestored++;
+
                 }
             }
         }
@@ -173,6 +181,15 @@ public class LandMark : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             grabText.GetComponent<Text>().text = "";
+            if (gameManager.colorRestored == 3)
+            {
+                gameManager.colorRestored = 0;
+                Cross.SetActive(false);
+                PauseMenu.SetActive(true);
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+                Time.timeScale = 0;
+            }
         }
     }
 }
