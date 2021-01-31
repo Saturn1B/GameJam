@@ -5,11 +5,12 @@ using UnityEngine.SceneManagement;
 
 public class MainMenu : MonoBehaviour
 {
-    public GameObject Menu, Credit;
+    public GameObject Menu, Credit, Panel, Explication, Control;
 
     public void Play()
     {
-        SceneManager.LoadScene(1);
+        //SceneManager.LoadScene(1);
+        StartCoroutine(LaunchGame());
     }
 
     public void LaunchCredit()
@@ -27,5 +28,17 @@ public class MainMenu : MonoBehaviour
     {
         Credit.SetActive(false);
         Menu.SetActive(true);
+    }
+
+    IEnumerator LaunchGame()
+    {
+        Menu.SetActive(false);
+        Panel.SetActive(true);
+        Explication.SetActive(true);
+        yield return new WaitForSeconds(10);
+        Explication.SetActive(false);
+        Control.SetActive(true);
+        yield return new WaitForSeconds(5);
+        SceneManager.LoadScene(1);
     }
 }
